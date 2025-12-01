@@ -76,24 +76,28 @@ jobs:
           pnpm build
 
       - name: 创建发布包
-        working-directory: .
+        shell: pwsh
         run: |
-          mkdir release/hyprglaze-bar-${{ github.ref_name }}
-
+          New-Item -ItemType Directory -Path "release\hyprglaze-bar-${{ github.ref_name }}" -Force
+          
           # 复制主题文件
-          xcopy /E /I "zebar\hyprglaze-bar\dist" "release\hyprglaze-bar-${{ github.ref_name }}\hyprglaze-bar"
-          copy "zebar\hyprglaze-bar\zpack.json" "release\hyprglaze-bar-${{ github.ref_name }}\hyprglaze-bar\"
-
+          Copy-Item -Path "zebar\hyprglaze-bar\dist" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\hyprglaze-bar" -Recurse -Force
+          Copy-Item -Path "zebar\hyprglaze-bar\zpack.json" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\hyprglaze-bar\" -Force
+          
           # 复制配置文件
-          copy "zebar\settings.json" "release\hyprglaze-bar-${{ github.ref_name }}\"
-          if exist "glazewm\config.yaml" xcopy /E /I "glazewm" "release\hyprglaze-bar-${{ github.ref_name }}\glazewm"
-
+          Copy-Item -Path "zebar\settings.json" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\" -Force
+          
+          # 复制 glazewm 配置（如果存在）
+          if (Test-Path "glazewm\config.yaml") {
+            Copy-Item -Path "glazewm" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\glazewm" -Recurse -Force
+          }
+          
           # 复制文档
-          copy "README.md" "release\hyprglaze-bar-${{ github.ref_name }}\"
-          copy "LICENSE" "release\hyprglaze-bar-${{ github.ref_name }}\"
-
+          Copy-Item -Path "README.md" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\" -Force
+          Copy-Item -Path "LICENSE" -Destination "release\hyprglaze-bar-${{ github.ref_name }}\" -Force
+          
           # 创建压缩包
-          powershell Compress-Archive -Path "release\hyprglaze-bar-${{ github.ref_name }}\*" -DestinationPath "hyprglaze-bar-${{ github.ref_name }}.zip"
+          Compress-Archive -Path "release\hyprglaze-bar-${{ github.ref_name }}\*" -DestinationPath "hyprglaze-bar-${{ github.ref_name }}.zip" -Force
 
       - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
